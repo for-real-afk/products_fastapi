@@ -1,32 +1,35 @@
 from fastapi import FastAPI, HTTPException
-from typing import List
 import csv
 
-app = FastAPI(title="Product Management API")
+app = FastAPI()
 
 products = []
 
-# Load CSV at startup
 @app.on_event("startup")
 def load_products():
     global products
-    with open("products.csv", mode="r", encoding="utf-8") as file:
-        reader = csv.DictReader(file)
-        products = [
-            {
-                "id": int(row["id"]),
-                "name": row["name"],
-                "description": row["description"]
-            }
-            for row in reader
-        ]
+    products = []
 
-# GET ALL PRODUCTS
+    with open("products.csv", mode="r", encoding="utf-8-sig") as file:
+        reader = csv.DictReader(file, delimiter="\t")  # 👈 IMPORTANT: tab delimiter
+
+        for row in reader:
+            # Skip empty rows
+            if not row["Id"]:
+                continue
+
+            products.append({
+                "id": int(row["Id"]),
+                "name": row["Product Name"],
+                "description": row["Description"]
+            })
+
+
 @app.get("/products")
 def get_all_products():
     return products
 
-# GET SINGLE PRODUCT
+
 @app.get("/products/{product_id}")
 def get_product(product_id: int):
     for product in products:
